@@ -147,6 +147,3 @@ if Plot_Boost_Data == 1
     set(0,'DefaultAxesColorOrder','default')
 
 end
-
-
-   

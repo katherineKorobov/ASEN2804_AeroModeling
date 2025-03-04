@@ -99,4 +99,3 @@ if Plot_Glide_Data == 1
 end
 
 end
-

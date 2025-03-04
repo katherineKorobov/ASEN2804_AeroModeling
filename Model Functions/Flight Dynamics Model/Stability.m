@@ -83,8 +83,8 @@ for i = 1:6 %Discrete phases of flight (1 = Boost Full Water, 2 = Boost 75% wate
         %% Stabilizer Coefficients
         X_ac_h(n) = X_LE_h1+(0.25*Design_Input.MAC_h1(n)); % horizontal tail #1 aerodynamic center
         X_ac_v(n) = X_LE_v1+(0.25*Design_Input.MAC_v1(n)); %  vertical tail #1 aerodynamic center
-        lt(n) = X_ac_h(n) - Xcg(n); %Moment arm to horz tail
-        lv(n) = X_ac_v(n) - Xcg(n); %Moment arm to vert tail
+        lt(n) = abs(X_ac_h(n) - Xcg(n)); %Moment arm to horz tail
+        lv(n) = abs(X_ac_v(n) - Xcg(n)); %Moment arm to vert tail
         Vh(n) = (Sref_h*lt(n))/(Sref*c); %Horizontal Tail Volume Coefficient
         Vv(n) = (Sref_v*lv(n))/(Sref*b); % Vertical tail volume coefficient
 
@@ -103,9 +103,14 @@ for i = 1:6 %Discrete phases of flight (1 = Boost Full Water, 2 = Boost 75% wate
             XT = [0.5 1 2];
             VT = [0.5 0.4 0.35];
             depsilon_dalpha(n) = interp1(XT,VT,lt(n)/(WingGeo_Data.b_w(n)/2),'linear','extrap'); 
-        h_np(n) = h_ac_wb(n) + Vh(n)*(at/a)*(1-depsilon_dalpha(n)); %NP in % MAC
-        Xnp(n)= h_np(n)*c; %location of NP from nose [m]
-
+        if Xac_wb(n) < X_ac_h(n) %Checks if configuration is canard or conventional
+            h_np(n) = h_ac_wb(n) + Vh(n)*(at/a)*(1-depsilon_dalpha(n)); %NP in % MAC
+            Xnp(n)= h_np(n)*c; %location of NP from nose [m]
+        else
+            h_np(n) = h_ac_wb(n) -Vh(n)*(at/a); %NP calculation for canard configuration
+            Xnp(n) = h_np(n)*c; %location of NP from nose [m]
+        end
+        
         %% Static Margin
         h_cg(n) = Xcg(n)/c; %location of CG in % MAC
         SM(n) = h_np(n)-h_cg(n); %Static Margin
@@ -113,19 +118,36 @@ for i = 1:6 %Discrete phases of flight (1 = Boost Full Water, 2 = Boost 75% wate
         %% CMAlpha
         Cm_alpha(n) = -a*SM(n);
 
-        %% Tail incidence angle
-        Cmacwb = 0; %= cm at zero lift - assume that of airfoil - zero for flat plate
-        eps0 = 0; %Downwash angle on horz tail when wing at zero lift [deg]
-        eps(n) = eps0+depsilon_dalpha(n)*AoA_e(n); %Downwash angle [deg]
+        if Xac_wb(n) < X_ac_h(n)
+            % Wing pitching moment coef and downwash angle
+            Cmacwb = 0; %= cm at zero lift - assume that of airfoil - zero for flat plate
+            eps0 = 0; %Downwash angle on horz tail when wing at zero lift [deg]
+            eps(n) = eps0+depsilon_dalpha(n)*AoA_e(n); %Downwash angle [deg]
+    
+            %set Cmacwb = 0 and rearrange to find incidence angle
+            i_t(n) = -(Cmacwb+a*AoA_e(n)*((h_cg(n)-h_ac_wb(n))-at/a*Vh(n)*(1-depsilon_dalpha(n))))/(Vh(n)*at)-eps0;
+    
+            %% Cm0>0
+            Cm0(n) = Cmacwb+Vh(n)*at*(i_t(n)+eps0);
+    
+            %% alpha tail
+            AoA_h1(n) = AoA_e(n)-i_t(n)-eps(n);
+        else
+            % Wing pitching moment coef and downwash angle
+            Cmacwb = 0; %= cm at zero lift - assume that of airfoil - zero for flat plate
+            eps0 = 0; %Downwash angle on horz tail when wing at zero lift [deg]
+            eps(n) = 0; %For canard, set downwash angle to zero [deg]
+    
+            %set Cmacwb = 0 and rearrange to find canardincidence angle
+            i_t(n) = (Cmacwb+a*AoA_e(n)*((h_cg(n)-h_ac_wb(n))+at/a*Vh(n)))/(Vh(n)*at); %Canard incidence angle
 
-        %set Cmacwb = 0 and rearrange to find incidence angle
-        i_t(n) = -(Cmacwb+a*AoA_e(n)*((h_cg(n)-h_ac_wb(n))-at/a*Vh(n)*(1-depsilon_dalpha(n))))/(Vh(n)*at)-eps0;
-
-        %% Cm0>0
-        Cm0(n) = Cmacwb+Vh(n)*at*(i_t(n)+eps0);
-
-        %% alpha tail
-        AoA_h1(n) = AoA_e(n)-i_t(n)-eps(n);
+            % Cm0>0
+            Cm0(n) = Cmacwb-Vh(n)*at*i_t(n); %Zero lift pitch moment for canard
+    
+            % alpha canard
+            AoA_h1(n) = AoA_e(n)-i_t(n); %deg
+        end
+        
                
     end
 
@@ -154,15 +176,15 @@ STAB_GLIDE_h1_SUMMARY = table(Glide_Stab.AoA_e,Glide_Stab.AoA_h1,Glide_Stab.i_t,
 
 %% Plots for this function (Figure 1100 - 1199)
 if Plot_Stability_Data == 1
-    %Standardize colormap for plots to align color to configurations evaluated
-    cmap = colormap(hsv(Count)); % Sets color map for the specific number of variables (that last part is important)
-    set(0,'DefaultAxesColorOrder',cmap) % overwrites default color order to what we just specified
-    set(gca(),'ColorOrder',cmap); % Not sure if this is entirely necessary, I think this is doing a similar thing to the above
     
     %Xcg,Xnp,SM shift over flight phases
     figure(1100)
     subplot(1,2,1);
     hold on
+    %Standardize colormap for plots to align color to configurations evaluated
+    cmap = colormap(hsv(Count)); % Sets color map for the specific number of variables (that last part is important)
+    set(0,'DefaultAxesColorOrder',cmap) % overwrites default color order to what we just specified
+
     for n = 1:Count;
         plot(linspace(1,6,6),STAB_Xcg_SUMMARY{n,:},DisplayName = [Design_Input.Config{n}, ' Xcg'],Marker="o",LineStyle="-",MarkerSize=10);
     end
@@ -180,6 +202,10 @@ if Plot_Stability_Data == 1
     
     subplot(1,2,2);
     hold on
+    %Standardize colormap for plots to align color to configurations evaluated
+    cmap = colormap(hsv(Count)); % Sets color map for the specific number of variables (that last part is important)
+    set(0,'DefaultAxesColorOrder',cmap) % overwrites default color order to what we just specified
+
     for n = 1:Count;
         plot(linspace(1,6,6),STAB_SM_SUMMARY{n,:},DisplayName = [Design_Input.Config{n}, ' SM'],Marker="x",MarkerSize=10);
     end
@@ -200,4 +226,3 @@ end
 
 
 end
-
