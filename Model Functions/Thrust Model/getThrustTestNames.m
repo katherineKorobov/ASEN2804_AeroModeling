@@ -15,4 +15,3 @@ end
 fileNames = char(fileNames); % Convert to char array from cell array
 TestInfo = table(waterVol, fileNames); % make a table :)
 end
-

@@ -81,8 +81,8 @@ for N = 1:numConfigs % use upper case N to distiguish that it is counting someth
     for i = 1:numTests
         %% Load data
         fileName = testNames(i, :); % again weird indexing is due to string arrays, we have to ask for all the characters in a row
-        data = readmatrix(fileName); % load the data
-        data = data(:,3)*4.448; % take only the third column and converting from lbf to N
+ data = readmatrix(strtrim(fileName)); % load the data
+ data = data(:,3)*4.448; % take only the third column and converting from lbf to N
 
         %% Data Conditioning
         % Find ending offset
