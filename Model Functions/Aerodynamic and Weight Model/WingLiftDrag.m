@@ -61,32 +61,23 @@ for n = 1:Count
 % /////////////////////////////////////////////////////////////////////////
     % Determine Span Efficiency Factor (e)
     if Design_Input.QuarterSweep_w(n) == 0 % If no quarter chord sweep:
-       
-        f_taper = 0.0524 * Design_Input.Taper_w(n)^4 - 0.15 * Design_Input.Taper_w(n)^3 + 0.1659 * Design_Input.Taper_w(n)^2 - 0.0706 * Design_Input.Taper_w(n) + 0.0119;
-        
+        f_taper = Design_Input.Taper_w(n);
+        f_taper = (0.0524 * f_taper^4) - (0.15 * f_taper^3) + (0.1659 * f_taper^2) - (0.0706 * f_taper) + 0.0119;
         e(n)= 1 / (1 + (f_taper * Design_Input.AR_w(n)));
-   
     else % If there is quarter chord sweep:
-        
-        f_taper = 0.0524 * Design_Input.Taper_w(n)^4 - 0.15 * Design_Input.Taper_w(n)^3 + 0.1659 * Design_Input.Taper_w(n)^2 - 0.0706 * Design_Input.Taper_w(n) + 0.0119;
-        
-        e(n)= cosd(Design_Input.QuarterSweep_w(n)) * (1 / (1 + (f_taper * Design_Input.AR_w(n))));
-   
+        f_taper = Design_Input.Taper_w(n);
+        f_taper = (0.0524 * (f_taper^4)) - (0.15 * (f_taper^3)) + (0.1659 * (f_taper^2)) - (0.0706 * (f_taper)) + 0.0119;
+        e(n)= (1 / (1 + (f_taper * Design_Input.AR_w(n)))) * cosd(Design_Input.QuarterSweep_w(n));
     end
-   
-    
     % Linear fit to Airfoil lift data
     Cl = polyfit(AoA(1:12),Airfoil{n,(5:16)},1); %Linear fit to airfoil Cl from -3 deg to 5 deg AoA
-  
-    a_0(n)= Cl(1); % 2D airfoil lift curve slope
-    
-    AoA_0(n)= roots(Cl); % 2D airfoil zero lift AoA (deg)
-    
+    a_0(n)=Cl(1); % 2D airfoil lift curve slope
+    AoA_0(n)=roots(Cl); % 2D airfoil zero lift AoA (deg)
     AirfoilLiftCurve(n,:) = polyval(Cl,AoA);
 
+
     % 3D Wing Lift Curve Slope Model
-    a(n)= a_0 / (1 + ((57.3 * a_0) / (pi * e(n) * Design_Input.AR_w(n)))); %3-D lift curve slope
-    
+    a(n) = a_0(n) / (1 + ((57.3 * a_0(n) / (pi * e(n) * Design_Input.AR_w(n))))); %3-D lift curve slope
     WingLiftCurve(n,:) = a(n)*AoA-(a(n)*AoA_0(n));
 
     % 3D Wing Drag Coefficient
@@ -109,6 +100,26 @@ WingDragCurve = array2table(WingDragCurve);
 WingDragCurve.Properties.VariableNames = AoA_Names;
 
 %% Plots for this function (Figure 20 - 29)
+% if Plot_Wing_Data == 1
+% 
+%     %% Aerodynamics Plotting
+%     set(groot, 'DefaultLineLineWidth', 2);
+%     %Lift Curves
+%     figure(20)
+%     hold on
+%     plot(AoA,Airfoil{1,(5:22)},'--','Color',"#4DBEEE");
+%     plot(AoA,AirfoilLiftCurve{1,:},'Color',"#A2142F");
+%     plot(AoA,WingLiftCurve{1,:},'Color',"#0072BD");
+%     % plot(Benchmark.AoA(:),Benchmark.CL(:),'--','Color',"#77AC30");
+%     xlabel('Angle of Attack [deg]');
+%     ylabel('Coefficient of Lift (CL) [ ]');
+%     title('Lift Curve Slope Modeling');
+%     legend('Airfoil Data','Airfoil Fit','Wing Model','Location','southeast');
+%     % legend('Airfoil Data','Airfoil Fit','Wing Model','Benchmark Aircraft','Location','southeast');
+%     grid on
+%     hold off
+% end
+
 %% WingLiftDrag.m Plot Update
 % Plots for this function (Figure 200 - 299)
 if Plot_Wing_Data == 1
@@ -134,7 +145,5 @@ if Plot_Wing_Data == 1
     % Reset default color order
     set(0,'DefaultAxesColorOrder','default')
 end
-
-
 
 end

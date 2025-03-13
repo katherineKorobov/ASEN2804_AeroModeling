@@ -170,10 +170,12 @@ for n = 1:Count
         W_bottle(n) = (Component_Data.m_bottle(n)/1000)*g; %Direct measurement & input of fabricated weight
     end
 
-    if Component_Data.Xcg_bottle(n) == 0
-        CG_bottle(n) = 0.7*Design_Input.Length_f(n); %Assume bottle CG at 70% fuselage length
+    if (Design_Input.Bottle_Vol(n)==1.25) && (Component_Data.m_bottle(n) == 0)
+        CG_bottle(n) = Design_Input.Length_f(n)-0.5*0.29; %Assume CG at 1/2 total 1.25L bottle height of 29 cm positioned at back of fuselage length
+    elseif (Design_Input.Bottle_Vol(n)==2) && (Component_Data.m_bottle(n) == 0)
+        CG_bottle(n) = Design_Input.Length_f(n)-0.5*0.32; %Assume CG at 1/2 total 2L bottle height of 32 cm positioned at back of fuselage length
     else
-        CG_bottle(n) = Component_Data.Xcg_bottle(n); %Direct measurement & input of CG
+        CG_bottle(n) = Component_Data.Xcg_bottle(n); %Direct measurement & input of CG of bottle
     end
        
     %Water Propellant Weight
@@ -210,8 +212,14 @@ for n = 1:Count
     
     %Payload Weight (as required)
     W_pay(n) = (Component_Data.m_pay(n)/1000)*g; %Payload weight as required (Netwtons)
-    CG_pay(n) = Component_Data.Xcg_pay(n); %Payload CG location manually defined in design input file
-
+    if (Design_Input.Bottle_Vol(n)==1.25) && (Component_Data.Xcg_pay(n) == 0);
+        CG_pay(n) = Design_Input.Length_f(n)-0.29; %Assumes instrumentation payload is at top of propellent bottle
+    elseif (Design_Input.Bottle_Vol(n)==2) && (Component_Data.Xcg_pay(n) == 0);
+        CG_pay(n) = Design_Input.Length_f(n)-0.32; %Assumes instrumentation payload is at top of propellent bottle
+    else
+        CG_pay(n) = Component_Data.Xcg_pay(n); %Payload CG location manually defined in design input file
+    end
+    
     %Ballast Weight (as required)
     W_ballast(n) = (Component_Data.m_ballast(n)/1000)*g; %Ballast Weight as required (Newtons)
     CG_ballast(n) = Component_Data.Xcg_ballast(n); %Ballast CG location manually defined in design input file
@@ -246,8 +254,7 @@ end
 Weight_Data= table(Wo, Wo_75, Wo_50, Wo_25, W_empty, W_nose, W_f, W_w, W_h1, W_h2, W_v1, W_v2, W_bottle, W_water, W_pay, W_ballast);
 CG_Data = table(CG_tot, CG_tot_75, CG_tot_50, CG_tot_25, CG_empty, CG_nose, CG_f, CG_w, CG_h1, CG_h2, CG_v1, CG_v2, CG_bottle, CG_water, CG_pay, CG_ballast);
 
-%% Weight.m Plot Updates
-% Plots for this function (Figure 700 - 799)
+%% Plots for this function (Figure 700 - 799)
 if Plot_Weight_Data == 1
     
     %Aircraft component weight breakdown
@@ -259,7 +266,6 @@ if Plot_Weight_Data == 1
     grid on
     ylabel('Design Configuration');
     xlabel('Weight (N)');
-    %legend()
     legend('Wo','W empty','W nose','W fuse','W wing','W h1','W h2','W v1','W v2','W bottle','W water','W payload','W ballast');
     title('Design Configuration Weight Buildup')
     % Define color order

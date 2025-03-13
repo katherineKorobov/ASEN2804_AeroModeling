@@ -41,18 +41,16 @@ for n = 1:Count
     %Find CL min Drag value of wing drag polar to estimate k2
     [CD_min,CD_min_index] = min(WingDragCurve{n,:});
     CL_minD = WingLiftCurve{n,CD_min_index};
-
     %Cavallo Oswalds Model 1 (Baseline required)
     Model1_Name = 'Cavallo'; %Name of first Oswald's Model
     eo_mod1(n) = 1.78*(1-0.045*Design_Input.AR_w(n)^0.68)-0.64;
-    k1_mod1(n) =  1/(pi*eo_mod1(n)*Design_Input.AR_w(n));
+    k1_mod1(n) = 1/(pi*eo_mod1(n)*Design_Input.AR_w(n));
     k2_mod1(n) = -2*k1_mod1(n)*CL_minD;
-
-    %Student Option Oswalds Model 2 
-     Model2_Name = 'Stinton'; %Name of second Oswald's Model
-    eo_mod2(n) = 1/ ((1/WingLiftModel.e) + (.38 * CD_min)* pi * Design_Input.AR_w(n));%Oswalds Estimate
+    %Student Option Oswalds Model 2
+    Model2_Name = 'Stinton'; %Name of second Oswald's Model
+    eo_mod2(n) = 1/(1/.95+.35); %Oswalds Estimate 
     k1_mod2(n) = 1/(pi*eo_mod2(n)*Design_Input.AR_w(n)); %k1 term
-    k2_mod2(n) = k1_mod2(n)*CL_minD; %k2 term (Do not edit)
+    k2_mod2(n) = -2*k1_mod2(n)*CL_minD; %k2 term (Do not edit)
     %Student Option Oswalds Model 3
     Model3_Name = 'Kroo'; %Name of third Oswald's Model
     eo_mod3(n) = 4.61 * (1 - 0.045 * Design_Input.AR_w(n)^0.68) / (pi * (1 + Design_Input.Taper_w(n))); %Oswalds Estimate
@@ -77,6 +75,25 @@ InducedDrag_Data = table(eo_mod1, eo_mod2, eo_mod3, k1_mod1, k1_mod2, k1_mod3, k
     CDi_mod3 = (WingLiftCurve{1,:}').^2.*InducedDrag_Data.k1_mod3(n)...
         +InducedDrag_Data.k2_mod3(1).*((WingLiftCurve{1,:}'));
     CDi_benchmark = Benchmark.CD-min(Benchmark.CD); % subtract off minCD to get CDi
+
+%% Plots for this function (Figure 40 - 49)
+% if Plot_Induced_Data == 1
+%     figure(40)
+%     hold on
+%     plot(WingLiftCurve{1,:},CDi_w,'--');
+%     plot(WingLiftCurve{1,:},CDi_mod1);
+%     plot(WingLiftCurve{1,:},CDi_mod2);
+%     plot(WingLiftCurve{1,:},CDi_mod3);
+%     % plot(WingLiftCurve{1,:},CDi_benchmark,'--');
+%     xlabel('Coefficient of Lift (CL) [ ]');
+%     ylabel('Induced Drag (CDi) [ ]');
+%     title('CDi Curves');
+%     legend('3D Wing',Model1_Name,Model2_Name,Model3_Name,'Location','southeast');
+%     % legend('3D Wing',Model1_Name,Model2_Name,Model3_Name,'Benchmark','Location','southeast');
+%     grid on
+%     hold off
+% end
+
 %% InducedDrag.m Plot Updates
 % Plots for this function (Figure 400 - 499)
 if Plot_Induced_Data == 1

@@ -65,9 +65,9 @@ if Plot_LD_Data == 1
         figure(599+n)
         hold on
         plot(WingLiftCurve{n,:},WingLiftCurve{n,:}./WingDragCurve{n,:},'--');
-        plot(WingLiftCurve{n,:},LD_mod1{n,:});
-        plot(WingLiftCurve{n,:},LD_mod2{n,:});
-        plot(WingLiftCurve{n,:},LD_mod3{n,:});
+        plot(WingLiftCurve{n,:},LD_mod1{n,:}, 'Color','#763889');
+        plot(WingLiftCurve{n,:},LD_mod2{n,:}, 'Color','#78ad31');
+        plot(WingLiftCurve{n,:},LD_mod3{n,:}, 'Color','#e3af3b');
         %plot(WingLiftCurve{1,:},LD_benchmark{1,:},'--');
         xlabel('Coefficient of Lift (CL) [ ]');
         ylabel('L/D Ratio [ ]');

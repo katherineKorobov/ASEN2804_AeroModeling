@@ -55,69 +55,69 @@ for n = 1:Count
     % MODIFY THIS SECTION
     % /////////////////////////////////////////////////////////////////////////
     %% Fuselage Contribution To CDo
-    k_surface = 1.015 * (10^(-5)); %paint on aluminum (m)
-    M = (Design_Input.V_o(n) / ATMOS.a);
-   
-    Re_f_L = (Design_Input.V_o(n) * Design_Input.Length_f(n)) / ATMOS.nu; %Re for fuselage
-    
-    Re_f_cutoff = 38.21 * (Design_Input.Length_f(n) / k_surface); %Re model using surface roughness
-    
-    Re_f = min(Re_f_L(n), Re_f_cutoff(n)); %Re used after evaluating Re_f_L and Re_f_cutoff
-    
-    Cf_f = 0.455 / ((log10(Re_f)^2.58) * (1+0.144 * M^2)^0.65); %Fuselage coefficient of friction
-    
-    FF_f(n) = (0.9 + (5 / Design_Input.Fine_f(n)^(1.5)) + (Design_Input.Fine_f(n) / 400)); %Fuselage Form Factor
+    k_surface = (0.634e-5); %paint on aluminum (m)
+    Re_f_L = (Design_Input.V_o(n) * Design_Input.Length_f(n)) / ATMOS.nu(n); %Re for fuselage
+    Re_f_cutoff = 38.21 * ((Design_Input.Length_f(n) / k_surface)^1.053); %Re model using surface roughness
 
-    CDo_f(n) = (Cf_f * FF_f(n) * Design_Input.Q_f(n) * Design_Input.Swet_f(n))/Design_Input.Sref_w(n); %Contribution of Fuselage to CDo
+    M = Design_Input.V_o(n) / ATMOS.a(n); % mach calc
+    f = Design_Input.Fine_f(n); % fineness ratio
+
+    Re_f = min(Re_f_L, Re_f_cutoff); %Re used after evaluating Re_f_L and Re_f_cutoff
+    Cf_f = 0.455 / (((log10(Re_f))^2.58) * ((1 + (0.144 * (M^2)))^0.65)); %Fuselage coefficient of friction
+    FF_f(n) = (0.9 + (5 / (f^1.5)) + (f / 400)); %Fuselage Form Factor
+
+    CDo_f(n) = (Cf_f*FF_f(n)*Design_Input.Q_f(n)*Design_Input.Swet_f(n))/Design_Input.Sref_w(n); %Contribution of Fuselage to CDo
 
     %% Wing Contribution to CDo
-    Re_w = (Design_Input.V_o(n) * WingGeo_Data.MAC_w) / ATMOS.nu; %Wing Re  
-    Cf_w = 0.074 / (Re_w^0.2); %Wing Flat Plate Coef of Friction for Turbulent Flow
-    FF_w(n) = (1 + (0.6 / (Airfoil.X_thick_w) * Airfoil.Thick_w(n) + 100 * (Airfoil.Thick_w(n)^4))); %Wing Form Factor
+
+
+    Re_w = (Design_Input.V_o(n) * WingGeo_Data.MAC_w(n)) / ATMOS.nu(n); %Wing Re     Maybe put 5e5 here? not sure
+    Cf_w = (0.074 / (Re_w^0.2)); %Wing Flat Plate Coef of Friction for Turbulent Flow
+    FF_w(n) = 1 + ((0.6 / Airfoil.X_thick_w(n)) * Airfoil.Thick_w(n)) + (100 * (Airfoil.Thick_w(n)^4)); %Wing Form Factor
 
     CDo_w(n) = (Cf_w*FF_w(n)*Design_Input.Q_w(n)*Design_Input.Swet_w(n))/Design_Input.Sref_w(n); %Contribution of Wing to CDo
 
     %% Horizontal Tail #1 Contribution to CDo
     if Design_Input.Swet_h1(n)~=0 % If this component exists:
-        Re_h1 = (Design_Input.V_o(n) * Design_Input.MAC_h1) / ATMOS.nu; %Horz Tail Re
-        Cf_h1 = 0.074 / (Re_h1^0.2); %Flat Plate Coef of Friction for Turbulent Flow
-        FF_h1(n) = (1 + (0.6 / (Airfoil.X_thick_h1(n)) * Airfoil.Thick_h1(n) + 100*(Airfoil.Thick_h1(n)^4))); %Horz Tail Form Factor
+        Re_h1 = (Design_Input.V_o(n) * Design_Input.MAC_h1(n)) / ATMOS.nu(n); %Horz Tail Re
+        Cf_h1 = (0.074 / (Re_h1^0.2)); %Flat Plate Coef of Friction for Turbulent Flow
+        FF_h1(n) = 1 + ((0.6 / Airfoil.X_thick_h1(n)) * Airfoil.Thick_h1(n)) + (100 * (Airfoil.Thick_h1(n)^4)); %Horz Tail Form Factor
 
         CDo_h1(n) = (Cf_h1*FF_h1(n)*Design_Input.Q_h1(n)*Design_Input.Swet_h1(n))/Design_Input.Sref_w(n); %Contribution of Horz Tail 1 to CDo
     end
     %% Horizontal Tail #2 Contribution to CDo
     if Design_Input.Swet_h2(n)~=0 % If this component exists:
-        Re_h2 = (Design_Input.V_o(n) * Design_Input.MAC_h2) / ATMOS.nu; %Horz Tail Re
-        Cf_h2 = 0.074 / (Re_h2^0.2); %Flat Plate Coef of Friction for Turbulent Flow
-        FF_h2(n) = (1 + (0.6 / (Airfoil.X_thick_h2) * Airfoil.Thick_h2(n) + 100*(Airfoil.Thick_h2(n)^4))); %Horz Tail Form Factor
+        Re_h2 = (Design_Input.V_o(n) * Design_Input.MAC_h2(n)) / ATMOS.nu(n); %Horz Tail Re
+        Cf_h2 = (0.074 / (Re_h2^0.2)); %Flat Plate Coef of Friction for Turbulent Flow
+        FF_h2(n) = 1 + ((0.6 / Airfoil.X_thick_h1(n)) * Airfoil.Thick_h1(n)) + (100 * (Airfoil.Thick_h1(n)^4)); %Horz Tail Form Factor
 
         CDo_h2(n) = (Cf_h2*FF_h2(n)*Design_Input.Q_h2(n)*Design_Input.Swet_h2(n))/Design_Input.Sref_w(n); %Contribution of Horz Tail 2 to CDo
     end
 
     %% Vertical Tail #1 Contribution to CDo
-    if Design_Input.Swet_v1(n)~= 0 % If this component exists:
-        Re_v1 = (Design_Input.V_o(n) * Design_Input.MAC_v1) / ATMOS.nu; %Horz Tail Re
-        Cf_v1 = 0.074 / (Re_v1^0.2); %Flat Plate Coef of Friction for Turbulent Flow
-        FF_v1(n) = (1 + (0.6 / (Airfoil.X_thick_v1) * Airfoil.Thick_v1(n) + 100*(Airfoil.Thick_v1(n)^4))); %Horz Tail Form Factor
+    if Design_Input.Swet_v1(n)~=0 % If this component exists:
+        Re_v1 = (Design_Input.V_o(n) * Design_Input.MAC_v1(n)) / ATMOS.nu(n); %Horz Tail Re
+        Cf_v1 = (0.074 / (Re_v1^0.2)); %Flat Plate Coef of Friction for Turbulent Flow
+        FF_v1(n) = 1 + ((0.6 / Airfoil.X_thick_v1(n)) * Airfoil.Thick_v1(n)) + (100 * (Airfoil.Thick_v1(n)^4)); %Horz Tail Form Factor
      
         CDo_v1(n) = (Cf_v1*FF_v1(n)*Design_Input.Q_v1(n)*Design_Input.Swet_v1(n))/Design_Input.Sref_w(n); %Contribution of Vert Tail 1 to CDo
     end
     %% Vertical Tail #2 Contribution to CDo
-    if Design_Input.Swet_v2(n)~= 0 % If this component exists:
-        Re_v2 = (Design_Input.V_o(n) * Design_Input.MAC_v2) / ATMOS.nu; %Horz Tail Re
-        Cf_v2 = 0.074 / (Re_v2^0.2); %Flat Plate Coef of Friction for Turbulent Flow
-        FF_v2(n) =(1 + (0.6 / (Airfoil.X_thick_v2) * Airfoil.Thick_v2(n) + 100*(Airfoil.Thick_v2(n)^4))) ; %Horz Tail Form Factor
+    if Design_Input.Swet_v2(n)~=0 % If this component exists:
+        Re_v2 = (Design_Input.V_o(n) * Design_Input.MAC_v2(n)) / ATMOS.nu(n); %Horz Tail Re
+        Cf_v2 = (0.074 / (Re_v2^0.2)); %Flat Plate Coef of Friction for Turbulent Flow
+        FF_v2(n) = 1 + ((0.6 / Airfoil.X_thick_v2(n)) * Airfoil.Thick_v2(n)) + (100 * (Airfoil.Thick_v2(n)^4)); %Horz Tail Form Factor
 
         CDo_v2(n) = (Cf_v2*FF_v2(n)*Design_Input.Q_v2(n)*Design_Input.Swet_v2(n))/Design_Input.Sref_w(n); %Contribution of Vert Tail 2 to CDo
     end
     %% Misc. and L&P Contributions to CDo
-    if Design_Input.Abase_f(n)~= 0 % If this component exists:
-        D_q_base = (0.139 + 0.419 * (M - 0.161)^2 ) * Design_Input.Abase_f;
+    if Design_Input.Abase_f(n)~=0 % If this component exists:
+        D_q_base = (0.139 + (.419 * (M - 0.161)^2)) * Design_Input.Abase_f(n);
         CDo_misc(n) = D_q_base/Design_Input.Sref_w(n); %Contribution of base drag to CDo
     end
-  
+
     %% Leakage and Proturbance Contribution to CDo
-    L_P_Percent = 0.1; %Percent increase of total parasite drag as estimate of leakage and perturbance in fractional value (10% = 0.1)
+    L_P_Percent = 0.08; %Percent increase of total parasite drag as estimate of leakage and perturbance in fractional value (10% = 0.1)
     CDo_lp(n) = L_P_Percent*(CDo_f(n)+CDo_w(n)+CDo_h1(n)+CDo_h2(n)+CDo_v1(n)+CDo_v2(n)); %Increase in parasite drag due to leakage and protuberance usually 3-15% of total CDo, but here just taking fuselage contribution
 
     %%Total Parasite Drag and Wetted Area
@@ -132,6 +132,20 @@ end
 Parasite_Data = table(CDo, CDo_f, CDo_w, CDo_h1, CDo_h2, CDo_v1, CDo_v2, CDo_misc, CDo_lp, Swet_tot); %Compiles table of all component parasite drag coefficients & total wetted area
 FF_Table = table(FF_f, FF_w, FF_h1, FF_h2, FF_v1, FF_v2); %Compiles table of all component form factors
 Q_Table = table(Design_Input.Q_f(n),Design_Input.Q_w(n),Design_Input.Q_h1(n),Design_Input.Q_h2(n),Design_Input.Q_v1(n),Design_Input.Q_v2(n)); %Compiles table of all component interference factors
+
+%% Plots for this function (Figure 30 - 39)
+% if Plot_Parasite_Data == 1
+%     for n = 1:Count
+%         figure(29+n)
+%         labels = {'CDo_f','CDo_w','CDo_{h1}','CDo_{h2}','CDo_{v1}','CDo_{v2}','CDo_{misc}','CDo_{lp}'};
+%         color = colororder("gem12");
+%         selectedColumns = Parasite_Data{:, {'CDo_f','CDo_w','CDo_h1','CDo_h2','CDo_v1','CDo_v2','CDo_misc','CDo_lp'}};
+%         piechart(10000*selectedColumns(n,:),labels,ColorOrder=color); %Puts values in terms of drag counts where 1 drag count = (10^4)*CDo_value
+%         title(sprintf('Contribution to Total Parasite Drag (In Drag Counts): Configuraton %d', n));
+%     end
+% 
+% end
+
 
 %% ParasiteDrag.m Plot Updates
 % Plots for this function (Figure 300 - 399)
