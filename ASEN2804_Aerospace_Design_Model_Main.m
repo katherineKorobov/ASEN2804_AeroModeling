@@ -34,7 +34,7 @@ addpath(genpath('Design Input Files'));
 addpath(genpath('Model Functions'));
 
 %% Import and Read Aircraft Design File
-Design_Input_Filename = "Design Input File_Student_Blank_V25-00.xlsx";
+Design_Input_Filename = "Design Input, Group 3.xlsx";
 
 Design_Input = readtable(Design_Input_Filename,'Sheet','Main_Input','ReadRowNames',true); %Read in Aircraft Geometry File
 Count = height(Design_Input); %Number of different aircraft configurations in design input file
@@ -109,7 +109,7 @@ Material_Data = readtable(Design_Input_Filename,'Sheet','Materials'); %Read in p
 
 %% Calculations - Lift and Drag
 % Call Wing Lift & Drag Model Function
-    Plot_Wing_Data = 0; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 200 - 299)
+    Plot_Wing_Data = 1; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 200 - 299)
     [WingLiftModel,AoA,AoA_Count,AirfoilLiftCurve,WingLiftCurve,WingDragCurve] =...
         WingLiftDrag(Design_Input,Airfoil,Count,Benchmark,Plot_Wing_Data); 
 
@@ -119,17 +119,17 @@ Material_Data = readtable(Design_Input_Filename,'Sheet','Materials'); %Read in p
         ParasiteDrag(Design_Input,Airfoil,WingGeo_Data,ATMOS,Count,Plot_Parasite_Data);
 
 % Call Induced Drag Model Function
-    Plot_Induced_Data = 0; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 400 - 499)
+    Plot_Induced_Data = 1; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 400 - 499)
     InducedDrag_Data = ...
         InducedDrag(Design_Input,WingLiftModel,WingLiftCurve,WingDragCurve,WingGeo_Data,Count,Benchmark,Plot_Induced_Data);
 
 % Call Complete Drag Polar Function
-Plot_DragPolar_Data = 0; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 500 - 599)
+Plot_DragPolar_Data = 1; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 500 - 599)
 [DragPolar_mod1,DragPolar_mod2,DragPolar_mod3] = ...
     DragPolar(Parasite_Drag_Data,InducedDrag_Data,Design_Input,AoA_Count,WingLiftCurve,WingDragCurve,AirfoilLiftCurve,Airfoil,Benchmark,Count,Plot_DragPolar_Data);
 
 % Call L/D Analysis Function
-    Plot_LD_Data = 0; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 600 - 699)
+    Plot_LD_Data = 1; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 600 - 699)
     [LD_mod1,LD_mod2,LD_mod3,LD_benchmark] = ...
         LD(Benchmark,DragPolar_mod1,DragPolar_mod2,DragPolar_mod3,WingLiftCurve,WingDragCurve,AoA_Count,Count,Plot_LD_Data);
 
@@ -149,7 +149,7 @@ Plot_DragPolar_Data = 0; %Set to 0 to suppress plots for this function or 1 to o
 
 % Call Glide Flight Dynamics Model (must select one drag polar model L/D
 % data for use in this model)
-    Plot_Glide_Data = 0; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 1000 - 1099)
+    Plot_Glide_Data = 1; %Set to 0 to suppress plots for this function or 1 to output plots (Fig 1000 - 1099)
     LD_Model = LD_mod1; %You must select one LD model output (from the LD function outputs) to utilize for this analysis
     [GlideData] = GlideDescent(LD_Model, apogee, Design_Input, ATMOS, Weight_Data, WingLiftModel, WingLiftCurve,WingDragCurve,hApogee,Count,Plot_Glide_Data); %Must select LD of your best model
 
